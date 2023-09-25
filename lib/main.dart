@@ -1,20 +1,65 @@
 import 'package:flutter/material.dart';
+import 'package:weather/homepage.dart';
+import 'package:weather/model.dart';
+import 'package:weather/service.dart';
 
 void main() {
-  runApp(const MainApp());
+  runApp(
+    const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: HomePage(),
+    ),
+  );
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class Weather extends StatefulWidget {
+  const Weather({super.key});
+
+  @override
+  State<Weather> createState() => WeatherState();
+}
+
+class WeatherState extends State<Weather> {
+  double temperature = 4999;
+  String condition = 'nothig';
+  double mintemp = 80;
+  Service service = Service();
+  Model model = Model();
+  @override
+  void initState() {
+    super.initState();
+    fetchweatherdata();
+  }
+
+  void fetchweatherdata() async {
+    final model = await service.fetchWeatherData('chennai');
+    setState(() {
+      temperature = model.temperatureC;
+      condition = model.condition;
+      mintemp = model.mintemp;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
-      ),
+    return Scaffold(
+      body: Center(
+          child: Column(
+        children: [
+          Text(
+            temperature.toString(),
+            style: TextStyle(fontSize: 40),
+          ),
+          Text(
+            condition.toString(),
+            style: TextStyle(fontSize: 40),
+          ),
+          Text(
+            mintemp.toString(),
+            style: TextStyle(fontSize: 40),
+          ),
+        ],
+      )),
     );
   }
 }
