@@ -18,6 +18,19 @@ class _HomePageState extends State<HomePage> {
 
   double maxTemp = 30;
   double minTemp = 2;
+  double maxTemp2 = 300;
+  double minTemp2 = 2;
+  double maxTemp3 = 30;
+  double minTemp3 = 2;
+  double maxTemp4 = 300;
+  double minTemp4 = 2;
+  double maxTemp5 = 30;
+  double minTemp5 = 2;
+  double maxTemp6 = 300;
+  double minTemp6 = 2;
+  double maxTemp7 = 30;
+  double minTemp7 = 2;
+
 
   Service service = Service();
   Model model = Model();
@@ -33,8 +46,20 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         temperature = model.temperatureC.toInt();
         condition = model.condition;
-        minTemp = model.mintemp;
-        maxTemp = model.maxtemp;
+        minTemp = model.mintemp[0];
+        maxTemp = model.maxtemp[0];
+        minTemp2 = model.mintemp[1];
+        maxTemp2 = model.maxtemp[1];
+        minTemp3 = model.mintemp[2];
+        maxTemp3 = model.maxtemp[2];
+        minTemp4 = model.mintemp[3];
+        maxTemp4 = model.maxtemp[3];
+        minTemp5 = model.mintemp[4];
+        maxTemp5 = model.maxtemp[4];
+        minTemp6 = model.mintemp[5];
+        maxTemp6 = model.maxtemp[5];
+        minTemp7 = model.mintemp[6];
+        maxTemp7 = model.maxtemp[6];
       });
     });
   }
@@ -358,60 +383,53 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                     buildSevenDayForecast(
                                       "Wed",
-                                      -5,
-                                      5,
+                                      minTemp2,
+                                      maxTemp2,
                                       FontAwesomeIcons.sun,
                                       size,
                                       isDarkMode,
                                     ),
                                     buildSevenDayForecast(
                                       "Thu",
-                                      -2,
-                                      7,
+                                      minTemp3,
+                                      maxTemp3,
                                       FontAwesomeIcons.cloudRain,
                                       size,
                                       isDarkMode,
                                     ),
                                     buildSevenDayForecast(
                                       "Fri",
-                                      3,
-                                      10,
+                                     minTemp4,
+                                      maxTemp4,
                                       FontAwesomeIcons.sun,
                                       size,
                                       isDarkMode,
                                     ),
                                     buildSevenDayForecast(
                                       "San",
-                                      1,
-                                      12,
+                                      minTemp5,
+                                      maxTemp5,
                                       FontAwesomeIcons.sun,
                                       size,
                                       isDarkMode,
                                     ),
                                     buildSevenDayForecast(
                                       "Sun",
-                                      4,
-                                      7,
+                                      minTemp6,
+                                      maxTemp6,
                                       FontAwesomeIcons.cloud,
                                       size,
                                       isDarkMode,
                                     ),
                                     buildSevenDayForecast(
                                       "Mon",
-                                      -2,
-                                      1,
+                                      minTemp7,
+                                      maxTemp7,
                                       FontAwesomeIcons.snowflake,
                                       size,
                                       isDarkMode,
                                     ),
-                                    buildSevenDayForecast(
-                                      "Tues",
-                                      0,
-                                      3,
-                                      FontAwesomeIcons.cloudRain,
-                                      size,
-                                      isDarkMode,
-                                    ),
+                                    
                                   ],
                                 ),
                               ),

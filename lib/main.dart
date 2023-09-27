@@ -36,7 +36,8 @@ class WeatherState extends State<Weather> {
     setState(() {
       temperature = model.temperatureC;
       condition = model.condition;
-      mintemp = model.mintemp;
+     
+      
     });
   }
 

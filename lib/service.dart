@@ -8,8 +8,11 @@ class Service {
 
   Future<Model> fetchWeatherData(String place) async {
     try {
-      final query = {'key': apiKey, 'q': place};
-      final uri = Uri.http('api.weatherapi.com', '/v1/forecast.json', query);
+      final query = {'key': apiKey, 
+      'q': place, 
+      'days': '7',
+      };
+      final uri = Uri.http('api.weatherapi.com','/v1/forecast.json', query);
       final response = await http.get(uri);
 
       if (response.statusCode == 200) {
