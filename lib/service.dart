@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:weather/model.dart';
 
 class Service {
-  final apiKey = '57f91c6c6f7c46ef8dc82844232309';
+  final apiKey = 'YOUR_API_KEY';
 
   Future<Model> fetchWeatherData(String place) async {
     try {
