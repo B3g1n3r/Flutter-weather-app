@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:weather/model.dart';
 import 'package:weather/service.dart';
 
@@ -16,24 +17,19 @@ class _HomePageState extends State<HomePage> {
   int temperature = 30;
   String condition = 'sunny';
 
-  double maxTemp = 30;
-  double minTemp = 2;
-  double maxTemp2 = 300;
-  double minTemp2 = 2;
-  double maxTemp3 = 30;
-  double minTemp3 = 2;
-  double maxTemp4 = 300;
-  double minTemp4 = 2;
-  double maxTemp5 = 30;
-  double minTemp5 = 2;
-  double maxTemp6 = 300;
-  double minTemp6 = 2;
-  double maxTemp7 = 30;
-  double minTemp7 = 2;
-
-
   Service service = Service();
   Model model = Model();
+  List<double> minTemps = List.filled(7, 2.0);
+  List<double> maxTemps = List.filled(7, 30.0);
+  List<double> precipitation = List.filled(24, 0);
+  List<double> hourlytemperatures = List.filled(24, 30.0);
+  List<double> windSpeed = List.filled(24, 0);
+  List<String> time = List.filled(24, '00:00');
+  List<IconData> icons = List.filled(24, FontAwesomeIcons.sun);
+
+  double minTemp = 0;
+  double maxTemp = 0;
+
   @override
   void initState() {
     super.initState();
@@ -43,24 +39,21 @@ class _HomePageState extends State<HomePage> {
   Future<void> fetchWeather() async {
     final model = await service.fetchWeatherData('chennai');
     setState(() {
-      setState(() {
-        temperature = model.temperatureC.toInt();
-        condition = model.condition;
-        minTemp = model.mintemp[0];
-        maxTemp = model.maxtemp[0];
-        minTemp2 = model.mintemp[1];
-        maxTemp2 = model.maxtemp[1];
-        minTemp3 = model.mintemp[2];
-        maxTemp3 = model.maxtemp[2];
-        minTemp4 = model.mintemp[3];
-        maxTemp4 = model.maxtemp[3];
-        minTemp5 = model.mintemp[4];
-        maxTemp5 = model.maxtemp[4];
-        minTemp6 = model.mintemp[5];
-        maxTemp6 = model.maxtemp[5];
-        minTemp7 = model.mintemp[6];
-        maxTemp7 = model.maxtemp[6];
-      });
+      temperature = model.temperatureC.toInt();
+      condition = model.condition;
+
+      for (var i = 0; i < 7; i++) {
+        minTemps[i] = model.mintemp[i];
+        maxTemps[i] = model.maxtemp[i];
+      }
+      for (var p = 0; p < 24; p++) {
+        precipitation[p] = model.precipitation[p];
+        hourlytemperatures[p] = model.temperature[p];
+        windSpeed[p] = model.wind[p];
+        time[p] = model.time[p];
+      }
+      minTemp = model.mintemp[0];
+      maxTemp = model.maxtemp[0];
     });
   }
 
@@ -69,6 +62,10 @@ class _HomePageState extends State<HomePage> {
     Size size = MediaQuery.of(context).size;
     var brightness = MediaQuery.of(context).platformBrightness;
     bool isDarkMode = brightness != Brightness.dark;
+
+    DateTime date = DateTime.now();
+    List<String> days = List.generate(7,
+        (index) => DateFormat('EEE').format(date.add(Duration(days: index))));
 
     return Scaffold(
       body: Center(
@@ -172,9 +169,9 @@ class _HomePageState extends State<HomePage> {
                       ),
                       Padding(
                         padding: EdgeInsets.only(
-                          top: size.height * 0.005,
-                        ),
+                            top: size.height * 0.005, left: size.width * 0.07),
                         child: Align(
+                          alignment: Alignment.center,
                           child: Text(
                             condition,
                             style: GoogleFonts.questrial(
@@ -234,103 +231,15 @@ class _HomePageState extends State<HomePage> {
                       Padding(
                         padding: EdgeInsets.all(size.width * 0.005),
                         child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: [
-                              //TODO: change weather forecast from local to api get
-                              buildForecastToday(
-                                "Now", //hour
-                                temperature.toInt(), //temperature
-                                20, //wind (km/h)
-                                0, //rain chance (%)
-                                FontAwesomeIcons.sun, //weather icon
+                            scrollDirection: Axis.horizontal,
+                            child: buildMultipleForecastsRow(
+                                time,
+                                hourlytemperatures,
+                                windSpeed,
+                                precipitation,
+                                icons,
                                 size,
-                                isDarkMode,
-                              ),
-                              buildForecastToday(
-                                "15:00",
-                                1,
-                                10,
-                                40,
-                                FontAwesomeIcons.cloud,
-                                size,
-                                isDarkMode,
-                              ),
-                              buildForecastToday(
-                                "16:00",
-                                0,
-                                25,
-                                80,
-                                FontAwesomeIcons.cloudRain,
-                                size,
-                                isDarkMode,
-                              ),
-                              buildForecastToday(
-                                "17:00",
-                                -2,
-                                28,
-                                60,
-                                FontAwesomeIcons.snowflake,
-                                size,
-                                isDarkMode,
-                              ),
-                              buildForecastToday(
-                                "18:00",
-                                -5,
-                                13,
-                                40,
-                                FontAwesomeIcons.cloudMoon,
-                                size,
-                                isDarkMode,
-                              ),
-                              buildForecastToday(
-                                "19:00",
-                                -8,
-                                9,
-                                60,
-                                FontAwesomeIcons.snowflake,
-                                size,
-                                isDarkMode,
-                              ),
-                              buildForecastToday(
-                                "20:00",
-                                -13,
-                                25,
-                                50,
-                                FontAwesomeIcons.snowflake,
-                                size,
-                                isDarkMode,
-                              ),
-                              buildForecastToday(
-                                "21:00",
-                                -14,
-                                12,
-                                40,
-                                FontAwesomeIcons.cloudMoon,
-                                size,
-                                isDarkMode,
-                              ),
-                              buildForecastToday(
-                                "22:00",
-                                -15,
-                                1,
-                                30,
-                                FontAwesomeIcons.moon,
-                                size,
-                                isDarkMode,
-                              ),
-                              buildForecastToday(
-                                "23:00",
-                                -15,
-                                15,
-                                20,
-                                FontAwesomeIcons.moon,
-                                size,
-                                isDarkMode,
-                              ),
-                            ],
-                          ),
-                        ),
+                                isDarkMode)),
                       ),
                       Padding(
                         padding: EdgeInsets.symmetric(
@@ -372,64 +281,62 @@ class _HomePageState extends State<HomePage> {
                                 padding: EdgeInsets.all(size.width * 0.005),
                                 child: Column(
                                   children: [
-                                    //TODO: change weather forecast from local to api get
                                     buildSevenDayForecast(
-                                      "Today", //day
-                                      minTemp, //min temperature
-                                      maxTemp, //max temperature
-                                      FontAwesomeIcons.cloud, //weather icon
-                                      size,
-                                      isDarkMode,
-                                    ),
-                                    buildSevenDayForecast(
-                                      "Wed",
-                                      minTemp2,
-                                      maxTemp2,
-                                      FontAwesomeIcons.sun,
-                                      size,
-                                      isDarkMode,
-                                    ),
-                                    buildSevenDayForecast(
-                                      "Thu",
-                                      minTemp3,
-                                      maxTemp3,
-                                      FontAwesomeIcons.cloudRain,
-                                      size,
-                                      isDarkMode,
-                                    ),
-                                    buildSevenDayForecast(
-                                      "Fri",
-                                     minTemp4,
-                                      maxTemp4,
-                                      FontAwesomeIcons.sun,
-                                      size,
-                                      isDarkMode,
-                                    ),
-                                    buildSevenDayForecast(
-                                      "San",
-                                      minTemp5,
-                                      maxTemp5,
-                                      FontAwesomeIcons.sun,
-                                      size,
-                                      isDarkMode,
-                                    ),
-                                    buildSevenDayForecast(
-                                      "Sun",
-                                      minTemp6,
-                                      maxTemp6,
+                                      "Today",
+                                      minTemps[0],
+                                      maxTemps[0],
                                       FontAwesomeIcons.cloud,
                                       size,
                                       isDarkMode,
                                     ),
                                     buildSevenDayForecast(
-                                      "Mon",
-                                      minTemp7,
-                                      maxTemp7,
+                                      days[1],
+                                      minTemps[1],
+                                      maxTemps[1],
+                                      FontAwesomeIcons.sun,
+                                      size,
+                                      isDarkMode,
+                                    ),
+                                    buildSevenDayForecast(
+                                      days[2],
+                                      minTemps[2],
+                                      maxTemps[2],
+                                      FontAwesomeIcons.cloudRain,
+                                      size,
+                                      isDarkMode,
+                                    ),
+                                    buildSevenDayForecast(
+                                      days[3],
+                                      minTemps[3],
+                                      maxTemps[3],
+                                      FontAwesomeIcons.sun,
+                                      size,
+                                      isDarkMode,
+                                    ),
+                                    buildSevenDayForecast(
+                                      days[4],
+                                      minTemps[4],
+                                      maxTemps[4],
+                                      FontAwesomeIcons.sun,
+                                      size,
+                                      isDarkMode,
+                                    ),
+                                    buildSevenDayForecast(
+                                      days[5],
+                                      minTemps[5],
+                                      maxTemps[5],
+                                      FontAwesomeIcons.cloud,
+                                      size,
+                                      isDarkMode,
+                                    ),
+                                    buildSevenDayForecast(
+                                      days[6],
+                                      minTemps[6],
+                                      maxTemps[6],
                                       FontAwesomeIcons.snowflake,
                                       size,
                                       isDarkMode,
                                     ),
-                                    
                                   ],
                                 ),
                               ),
@@ -448,8 +355,37 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget buildForecastToday(String time, int temp, int wind, int rainChance,
-      IconData icon, size, bool isDarkMode) {
+  Row buildMultipleForecastsRow(
+    List<String> times,
+    List<double> temperatures,
+    List<double> windSpeeds,
+    List<double> precipitations,
+    List<IconData> icons,
+    Size size,
+    bool isDarkMode,
+  ) {
+    List<Widget> forecasts = [];
+    for (var p = 0; p < 24; p++) {
+      forecasts.add(
+        buildForecastToday(
+          times[p],
+          temperatures[p],
+          windSpeeds[p],
+          precipitations[p],
+          icons[p],
+          size,
+          isDarkMode,
+        ),
+      );
+    }
+
+    return Row(
+      children: forecasts,
+    );
+  }
+
+  Widget buildForecastToday(String time, double temp, double wind,
+      double rainChance, IconData icon, size, bool isDarkMode) {
     return Padding(
       padding: EdgeInsets.all(size.width * 0.025),
       child: Column(children: [

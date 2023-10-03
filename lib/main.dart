@@ -45,19 +45,22 @@ class WeatherState extends State<Weather> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
+
           child: Column(
         children: [
+
+          
           Text(
             temperature.toString(),
-            style: TextStyle(fontSize: 40),
+            style: const TextStyle(fontSize: 40),
           ),
           Text(
             condition.toString(),
-            style: TextStyle(fontSize: 40),
+            style: const TextStyle(fontSize: 40),
           ),
           Text(
             mintemp.toString(),
-            style: TextStyle(fontSize: 40),
+            style: const TextStyle(fontSize: 40),
           ),
         ],
       )),
