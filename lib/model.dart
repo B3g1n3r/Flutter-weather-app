@@ -7,16 +7,19 @@ class Model {
   final List<double> temperature;
   final List<double> wind;
   final List<String> time;
+  final Map<String, dynamic>? error;
 
-  Model(
-      {this.temperatureC = 0,
-      this.condition = 'sunny',
-      this.maxtemp = const [],
-      this.mintemp = const [],
-      this.precipitation = const [],
-      this.temperature = const [],
-      this.wind = const [],
-      this.time = const []});
+  Model({
+    this.error,
+    this.temperatureC = 0,
+    this.condition = 'sunny',
+    this.maxtemp = const [],
+    this.mintemp = const [],
+    this.precipitation = const [],
+    this.temperature = const [],
+    this.wind = const [],
+    this.time = const [],
+  });
 
   factory Model.fromJson(Map<String, dynamic> json) {
     final tempC = (json['current']['temp_c'] as num).toDouble();
@@ -64,6 +67,9 @@ class Model {
         return (hour).toString();
       },
     ).toList();
+
+    final error = json.containsKey('error') ? json['error'] : null;
+
     return Model(
         temperatureC: tempC,
         condition: conditionText,
@@ -72,6 +78,7 @@ class Model {
         precipitation: allPrecip,
         temperature: allTemp,
         wind: allWind,
-        time: allTime);
+        time: allTime,
+        error: error);
   }
 }

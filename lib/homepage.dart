@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -16,7 +17,8 @@ class _HomePageState extends State<HomePage> {
   String cityName = 'Chennai';
   int temperature = 30;
   String condition = 'sunny';
-
+  bool isSearch = false;
+  String? errorMessage = 'error';
   Service service = Service();
   Model model = Model();
   List<double> minTemps = List.filled(7, 2.0);
@@ -33,28 +35,59 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    fetchWeather();
+    fetchWeather(cityName);
   }
 
-  Future<void> fetchWeather() async {
-    final model = await service.fetchWeatherData('chennai');
-    setState(() {
-      temperature = model.temperatureC.toInt();
-      condition = model.condition;
+  Future<void> fetchWeather(String cityName) async {
+    final model = await service.fetchWeatherData(cityName);
+    errorMessage = model.error?['message'];
+    if (model.error != null) {
+      // ignore: use_build_context_synchronously
+      showDialog(
+        context: context,
+        builder: ((context) {
+          return AlertDialog(
+            title: const Text('Invalid Location'),
+            content: Text('$errorMessage'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+  Navigator.pop(context);
+  setState(() {
+    cityName = 'Tamil Nadu'; 
+  });
+  fetchWeather(cityName); 
+},
+                child: Text(
+                  'OK',
+                  style: GoogleFonts.questrial(
+                    color: Colors.blueAccent,
+                  ),
+                ),
+              ),
+            ],
+          );
+        }),
+      );
+    } else {
+      setState(() {
+        temperature = model.temperatureC.toInt();
+        condition = model.condition;
 
-      for (var i = 0; i < 7; i++) {
-        minTemps[i] = model.mintemp[i];
-        maxTemps[i] = model.maxtemp[i];
-      }
-      for (var p = 0; p < 24; p++) {
-        precipitation[p] = model.precipitation[p];
-        hourlytemperatures[p] = model.temperature[p];
-        windSpeed[p] = model.wind[p];
-        time[p] = model.time[p];
-      }
-      minTemp = model.mintemp[0];
-      maxTemp = model.maxtemp[0];
-    });
+        for (var i = 0; i < 7; i++) {
+          minTemps[i] = model.mintemp[i];
+          maxTemps[i] = model.maxtemp[i];
+        }
+        for (var p = 0; p < 24; p++) {
+          precipitation[p] = model.precipitation[p];
+          hourlytemperatures[p] = model.temperature[p];
+          windSpeed[p] = model.wind[p];
+          time[p] = model.time[p];
+        }
+        minTemp = model.mintemp[0];
+        maxTemp = model.maxtemp[0];
+      });
+    }
   }
 
   @override
@@ -90,30 +123,100 @@ class _HomePageState extends State<HomePage> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            FaIcon(
-                              FontAwesomeIcons.bars,
-                              color: isDarkMode ? Colors.black : Colors.white,
-                            ),
-                            Align(
-                              child: Text(
-                                'Weather app',
-                                style: GoogleFonts.questrial(
-                                    color: isDarkMode
-                                        ? Colors.black
-                                        : Colors.white,
-                                    fontSize: size.height * 0.04),
+                            Visibility(
+                              visible: !isSearch,
+                              child: FaIcon(
+                                FontAwesomeIcons.bars,
+                                color: isDarkMode ? Colors.black : Colors.white,
                               ),
                             ),
-                            FaIcon(
-                              FontAwesomeIcons.circlePlus,
-                              color: isDarkMode ? Colors.black : Colors.white,
+                            Stack(
+                              children: [
+                                Visibility(
+                                  visible: !isSearch,
+                                  child: Align(
+                                    child: Text(
+                                      'Weather app',
+                                      style: GoogleFonts.questrial(
+                                        color: isDarkMode
+                                            ? Colors.black
+                                            : Colors.white,
+                                        fontSize: size.height * 0.04,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Visibility(
+                                  visible: isSearch,
+                                  child: Container(
+                                    width: size.width * 0.9,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10.0),
+                                    decoration: BoxDecoration(
+                                      color: isDarkMode
+                                          ? Colors.grey
+                                          : Colors.white,
+                                      borderRadius: BorderRadius.circular(20.0),
+                                    ),
+                                    child: TextFormField(
+                                      onFieldSubmitted: (value) {
+                                        fetchWeather(value);
+                                        setState(() {
+                                          cityName = value;
+                                          isSearch = !isSearch;
+                                        });
+                                      },
+                                      decoration: InputDecoration(
+                                        hintText: 'Search Location',
+                                        border: InputBorder.none,
+                                        icon: const Icon(
+                                          FontAwesomeIcons.search,
+                                          color: Colors.black,
+                                        ),
+                                        suffixIcon: IconButton(
+                                            onPressed: () {
+                                              setState(() {
+                                                isSearch = !isSearch;
+                                              });
+                                            },
+                                            icon: const Icon(
+                                              Icons.cancel,
+                                              color: Colors.black,
+                                            )),
+                                      ),
+                                      style: GoogleFonts.questrial(
+                                        color: Colors.black,
+                                        fontSize: size.height * 0.025,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Visibility(
+                              visible: !isSearch,
+                              child: IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    isSearch = !isSearch;
+                                  });
+                                  if (kDebugMode) {
+                                    print('$isSearch');
+                                  }
+                                },
+                                icon: Icon(
+                                  FontAwesomeIcons.searchLocation,
+                                  color:
+                                      isDarkMode ? Colors.black : Colors.white,
+                                ),
+                              ),
                             ),
                           ],
                         ),
                       ),
                       Padding(
                         padding: EdgeInsets.only(
-                          top: size.height * 0.03,
+                          top: size.height * 0.01,
                         ),
                         child: Align(
                           child: Text(

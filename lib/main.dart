@@ -23,7 +23,9 @@ class WeatherState extends State<Weather> {
   double temperature = 4999;
   String condition = 'nothig';
   double mintemp = 80;
+  String place = 'chennai';
   Service service = Service();
+
   Model model = Model();
   @override
   void initState() {
@@ -32,12 +34,11 @@ class WeatherState extends State<Weather> {
   }
 
   void fetchweatherdata() async {
-    final model = await service.fetchWeatherData('chennai');
+    final model = await service.fetchWeatherData(place);
+    print(model);
     setState(() {
       temperature = model.temperatureC;
       condition = model.condition;
-     
-      
     });
   }
 
@@ -45,11 +46,8 @@ class WeatherState extends State<Weather> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-
           child: Column(
         children: [
-
-          
           Text(
             temperature.toString(),
             style: const TextStyle(fontSize: 40),
