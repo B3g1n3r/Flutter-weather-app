@@ -28,6 +28,7 @@ class _HomePageState extends State<HomePage> {
   List<double> windSpeed = List.filled(24, 0);
   List<String> time = List.filled(24, '00:00');
   List<IconData> icons = List.filled(24, FontAwesomeIcons.sun);
+  bool isLoading = false;
 
   double minTemp = 0;
   double maxTemp = 0;
@@ -39,8 +40,15 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> fetchWeather(String cityName) async {
+    setState(() {
+      isLoading = true;
+    });
     final model = await service.fetchWeatherData(cityName);
+    setState(() {
+      isLoading = false;
+    });
     errorMessage = model.error?['message'];
+
     if (model.error != null) {
       // ignore: use_build_context_synchronously
       showDialog(
@@ -52,15 +60,16 @@ class _HomePageState extends State<HomePage> {
             actions: <Widget>[
               TextButton(
                 onPressed: () {
-  Navigator.pop(context);
-  setState(() {
-    cityName = 'Tamil Nadu'; 
-  });
-  fetchWeather(cityName); 
-},
+                  Navigator.pop(context);
+                  setState(() {
+                    cityName = 'Tamil Nadu';
+                  });
+                  fetchWeather(cityName);
+                },
                 child: Text(
                   'OK',
                   style: GoogleFonts.questrial(
+                    textStyle: const TextStyle(fontWeight: FontWeight.bold),
                     color: Colors.blueAccent,
                   ),
                 ),
@@ -73,10 +82,15 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         temperature = model.temperatureC.toInt();
         condition = model.condition;
+        cityName = cityName;
 
         for (var i = 0; i < 7; i++) {
-          minTemps[i] = model.mintemp[i];
-          maxTemps[i] = model.maxtemp[i];
+          if (i < model.mintemp.length) {
+            minTemps[i] = model.mintemp[i];
+          }
+          if (i < model.maxtemp.length) {
+            maxTemps[i] = model.maxtemp[i];
+          }
         }
         for (var p = 0; p < 24; p++) {
           precipitation[p] = model.precipitation[p];
@@ -101,360 +115,399 @@ class _HomePageState extends State<HomePage> {
         (index) => DateFormat('EEE').format(date.add(Duration(days: index))));
 
     return Scaffold(
-      body: Center(
-        child: Container(
-          height: size.height,
-          width: size.width,
-          decoration: BoxDecoration(
-            color: isDarkMode ? Colors.white : Colors.black,
+      body: isLoading
+          ?  Center(
+  child: Container(
+    height: size.height,
+    width: size.width,
+    decoration: BoxDecoration(
+      color: isDarkMode ? Colors.white : Colors.black,
+    ),
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const CircularProgressIndicator(
+          backgroundColor: Colors.grey,
+        ),
+        const SizedBox(height: 16),
+        Text(
+          'Loading Weather Data...',
+          style: TextStyle(
+            color: isDarkMode ? Colors.black : Colors.white,
+            fontSize: 16,
           ),
-          child: SafeArea(
-            child: Stack(
-              children: [
-                SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+        ),
+      ],
+    ),
+  ),
+)
+          : Center(
+              child: Container(
+                height: size.height,
+                width: size.width,
+                decoration: BoxDecoration(
+                  color: isDarkMode ? Colors.white : Colors.black,
+                ),
+                child: SafeArea(
+                  child: Stack(
                     children: [
-                      Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: size.height * 0.01,
-                          vertical: size.width * 0.05,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Visibility(
-                              visible: !isSearch,
-                              child: FaIcon(
-                                FontAwesomeIcons.bars,
-                                color: isDarkMode ? Colors.black : Colors.white,
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: size.height * 0.01,
+                                vertical: size.width * 0.05,
                               ),
-                            ),
-                            Stack(
-                              children: [
-                                Visibility(
-                                  visible: !isSearch,
-                                  child: Align(
-                                    child: Text(
-                                      'Weather app',
-                                      style: GoogleFonts.questrial(
-                                        color: isDarkMode
-                                            ? Colors.black
-                                            : Colors.white,
-                                        fontSize: size.height * 0.04,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Visibility(
-                                  visible: isSearch,
-                                  child: Container(
-                                    width: size.width * 0.9,
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 10.0),
-                                    decoration: BoxDecoration(
-                                      color: isDarkMode
-                                          ? Colors.grey
-                                          : Colors.white,
-                                      borderRadius: BorderRadius.circular(20.0),
-                                    ),
-                                    child: TextFormField(
-                                      onFieldSubmitted: (value) {
-                                        fetchWeather(value);
-                                        setState(() {
-                                          cityName = value;
-                                          isSearch = !isSearch;
-                                        });
-                                      },
-                                      decoration: InputDecoration(
-                                        hintText: 'Search Location',
-                                        border: InputBorder.none,
-                                        icon: const Icon(
-                                          FontAwesomeIcons.search,
-                                          color: Colors.black,
-                                        ),
-                                        suffixIcon: IconButton(
-                                            onPressed: () {
-                                              setState(() {
-                                                isSearch = !isSearch;
-                                              });
-                                            },
-                                            icon: const Icon(
-                                              Icons.cancel,
-                                              color: Colors.black,
-                                            )),
-                                      ),
-                                      style: GoogleFonts.questrial(
-                                        color: Colors.black,
-                                        fontSize: size.height * 0.025,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Visibility(
-                              visible: !isSearch,
-                              child: IconButton(
-                                onPressed: () {
-                                  setState(() {
-                                    isSearch = !isSearch;
-                                  });
-                                  if (kDebugMode) {
-                                    print('$isSearch');
-                                  }
-                                },
-                                icon: Icon(
-                                  FontAwesomeIcons.searchLocation,
-                                  color:
-                                      isDarkMode ? Colors.black : Colors.white,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.only(
-                          top: size.height * 0.01,
-                        ),
-                        child: Align(
-                          child: Text(
-                            cityName,
-                            style: GoogleFonts.questrial(
-                                color: isDarkMode ? Colors.black : Colors.white,
-                                fontSize: size.height * 0.06,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.only(
-                          top: size.height * 0.005,
-                        ),
-                        child: Align(
-                          child: Text(
-                            'Today',
-                            style: GoogleFonts.questrial(
-                                color: isDarkMode
-                                    ? Colors.black54
-                                    : Colors.white54,
-                                fontSize: size.height * 0.035,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.only(
-                          top: size.height * 0.03,
-                        ),
-                        child: Align(
-                          child: Text(
-                            '$temperature˚C',
-                            style: GoogleFonts.questrial(
-                              fontSize: size.height * 0.11,
-                              color: temperature < 0
-                                  ? Colors.blue
-                                  : temperature > 0 && temperature <= 15
-                                      ? Colors.indigo
-                                      : temperature > 15 && temperature < 30
-                                          ? Colors.deepPurple
-                                          : Colors.pink,
-                            ),
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: size.width * 0.25),
-                        child: Divider(
-                            color: isDarkMode ? Colors.black : Colors.white),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.only(
-                            top: size.height * 0.005, left: size.width * 0.07),
-                        child: Align(
-                          alignment: Alignment.center,
-                          child: Text(
-                            condition,
-                            style: GoogleFonts.questrial(
-                                fontSize: size.height * 0.03,
-                                color: isDarkMode
-                                    ? Colors.black54
-                                    : Colors.white54),
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.only(
-                          top: size.height * 0.03,
-                          bottom: size.height * 0.01,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              '$minTemp˚C', // min temperature
-                              style: GoogleFonts.questrial(
-                                color: minTemp <= 0
-                                    ? Colors.blue
-                                    : minTemp > 0 && minTemp <= 15
-                                        ? Colors.indigo
-                                        : minTemp > 15 && minTemp < 30
-                                            ? Colors.deepPurple
-                                            : Colors.pink,
-                                fontSize: size.height * 0.03,
-                              ),
-                            ),
-                            Text(
-                              '/',
-                              style: GoogleFonts.questrial(
-                                color: isDarkMode
-                                    ? Colors.black54
-                                    : Colors.white54,
-                                fontSize: size.height * 0.03,
-                              ),
-                            ),
-                            Text(
-                              '$maxTemp˚C', //max temperature
-                              style: GoogleFonts.questrial(
-                                color: maxTemp <= 0
-                                    ? Colors.blue
-                                    : maxTemp > 0 && maxTemp <= 15
-                                        ? Colors.indigo
-                                        : maxTemp > 15 && maxTemp < 30
-                                            ? Colors.deepPurple
-                                            : Colors.pink,
-                                fontSize: size.height * 0.03,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.all(size.width * 0.005),
-                        child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: buildMultipleForecastsRow(
-                                time,
-                                hourlytemperatures,
-                                windSpeed,
-                                precipitation,
-                                icons,
-                                size,
-                                isDarkMode)),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: size.width * 0.05,
-                          vertical: size.height * 0.02,
-                        ),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: const BorderRadius.all(
-                              Radius.circular(10),
-                            ),
-                            color: Colors.white.withOpacity(0.05),
-                          ),
-                          child: Column(
-                            children: [
-                              Align(
-                                alignment: Alignment.centerLeft,
-                                child: Padding(
-                                  padding: EdgeInsets.only(
-                                    top: size.height * 0.02,
-                                    left: size.width * 0.03,
-                                  ),
-                                  child: Text(
-                                    '7-day forecast',
-                                    style: GoogleFonts.questrial(
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Visibility(
+                                    visible: !isSearch,
+                                    child: FaIcon(
+                                      FontAwesomeIcons.bars,
                                       color: isDarkMode
                                           ? Colors.black
                                           : Colors.white,
-                                      fontSize: size.height * 0.025,
-                                      fontWeight: FontWeight.bold,
                                     ),
+                                  ),
+                                  Stack(
+                                    children: [
+                                      Visibility(
+                                        visible: !isSearch,
+                                        child: Align(
+                                          child: Text(
+                                            'Weather app',
+                                            style: GoogleFonts.questrial(
+                                              color: isDarkMode
+                                                  ? Colors.black
+                                                  : Colors.white,
+                                              fontSize: size.height * 0.04,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Visibility(
+                                        visible: isSearch,
+                                        child: Container(
+                                          width: size.width * 0.9,
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 10.0),
+                                          decoration: BoxDecoration(
+                                            color: isDarkMode
+                                                ? Colors.grey
+                                                : Colors.white,
+                                            borderRadius:
+                                                BorderRadius.circular(20.0),
+                                          ),
+                                          child: TextFormField(
+                                            onFieldSubmitted: (value) {
+                                              fetchWeather(value);
+                                              setState(() {
+                                                cityName = value;
+                                                isSearch = !isSearch;
+                                              });
+                                            },
+                                            decoration: InputDecoration(
+                                              hintText: 'Search Location',
+                                              border: InputBorder.none,
+                                              icon: const Icon(
+                                                FontAwesomeIcons.magnifyingGlass,
+                                                color: Colors.black,
+                                              ),
+                                              suffixIcon: IconButton(
+                                                  onPressed: () {
+                                                    setState(() {
+                                                      isSearch = !isSearch;
+                                                    });
+                                                  },
+                                                  icon: const Icon(
+                                                    Icons.cancel,
+                                                    color: Colors.black,
+                                                  )),
+                                            ),
+                                            style: GoogleFonts.questrial(
+                                              color: Colors.black,
+                                              fontSize: size.height * 0.025,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Visibility(
+                                    visible: !isSearch,
+                                    child: IconButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          isSearch = !isSearch;
+                                        });
+                                        if (kDebugMode) {
+                                          print('$isSearch');
+                                        }
+                                      },
+                                      icon: Icon(
+                                        FontAwesomeIcons.searchLocation,
+                                        color: isDarkMode
+                                            ? Colors.black
+                                            : Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(
+                                top: size.height * 0.01,
+                              ),
+                              child: Align(
+                                child: Text(
+                                  cityName,
+                                  style: GoogleFonts.questrial(
+                                      color: isDarkMode
+                                          ? Colors.black
+                                          : Colors.white,
+                                      fontSize: size.height * 0.06,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(
+                                top: size.height * 0.005,
+                              ),
+                              child: Align(
+                                child: Text(
+                                  'Today',
+                                  style: GoogleFonts.questrial(
+                                      color: isDarkMode
+                                          ? Colors.black54
+                                          : Colors.white54,
+                                      fontSize: size.height * 0.035,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(
+                                top: size.height * 0.03,
+                              ),
+                              child: Align(
+                                child: Text(
+                                  '$temperature˚C',
+                                  style: GoogleFonts.questrial(
+                                    fontSize: size.height * 0.11,
+                                    color: temperature < 0
+                                        ? Colors.blue
+                                        : temperature > 0 && temperature <= 15
+                                            ? Colors.indigo
+                                            : temperature > 15 &&
+                                                    temperature < 30
+                                                ? Colors.deepPurple
+                                                : Colors.pink,
                                   ),
                                 ),
                               ),
-                              Divider(
-                                color: isDarkMode ? Colors.white : Colors.black,
+                            ),
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: size.width * 0.25),
+                              child: Divider(
+                                  color:
+                                      isDarkMode ? Colors.black : Colors.white),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(
+                                  top: size.height * 0.005,
+                                  left: size.width * 0.07),
+                              child: Align(
+                                alignment: Alignment.center,
+                                child: Text(
+                                  condition,
+                                  style: GoogleFonts.questrial(
+                                      fontSize: size.height * 0.03,
+                                      color: isDarkMode
+                                          ? Colors.black54
+                                          : Colors.white54),
+                                ),
                               ),
-                              Padding(
-                                padding: EdgeInsets.all(size.width * 0.005),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(
+                                top: size.height * 0.03,
+                                bottom: size.height * 0.01,
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    '$minTemp˚C', // min temperature
+                                    style: GoogleFonts.questrial(
+                                      color: minTemp <= 0
+                                          ? Colors.blue
+                                          : minTemp > 0 && minTemp <= 15
+                                              ? Colors.indigo
+                                              : minTemp > 15 && minTemp < 30
+                                                  ? Colors.deepPurple
+                                                  : Colors.pink,
+                                      fontSize: size.height * 0.03,
+                                    ),
+                                  ),
+                                  Text(
+                                    '/',
+                                    style: GoogleFonts.questrial(
+                                      color: isDarkMode
+                                          ? Colors.black54
+                                          : Colors.white54,
+                                      fontSize: size.height * 0.03,
+                                    ),
+                                  ),
+                                  Text(
+                                    '$maxTemp˚C', //max temperature
+                                    style: GoogleFonts.questrial(
+                                      color: maxTemp <= 0
+                                          ? Colors.blue
+                                          : maxTemp > 0 && maxTemp <= 15
+                                              ? Colors.indigo
+                                              : maxTemp > 15 && maxTemp < 30
+                                                  ? Colors.deepPurple
+                                                  : Colors.pink,
+                                      fontSize: size.height * 0.03,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.all(size.width * 0.005),
+                              child: SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: buildMultipleForecastsRow(
+                                      time,
+                                      hourlytemperatures,
+                                      windSpeed,
+                                      precipitation,
+                                      FontAwesomeIcons.sun,
+                                      size,
+                                      isDarkMode)),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: size.width * 0.05,
+                                vertical: size.height * 0.02,
+                              ),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: const BorderRadius.all(
+                                    Radius.circular(10),
+                                  ),
+                                  color: Colors.white.withOpacity(0.05),
+                                ),
                                 child: Column(
                                   children: [
-                                    buildSevenDayForecast(
-                                      "Today",
-                                      minTemps[0],
-                                      maxTemps[0],
-                                      FontAwesomeIcons.cloud,
-                                      size,
-                                      isDarkMode,
+                                    Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Padding(
+                                        padding: EdgeInsets.only(
+                                          top: size.height * 0.02,
+                                          left: size.width * 0.03,
+                                        ),
+                                        child: Text(
+                                          '7-day forecast',
+                                          style: GoogleFonts.questrial(
+                                            color: isDarkMode
+                                                ? Colors.black
+                                                : Colors.white,
+                                            fontSize: size.height * 0.025,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
                                     ),
-                                    buildSevenDayForecast(
-                                      days[1],
-                                      minTemps[1],
-                                      maxTemps[1],
-                                      FontAwesomeIcons.sun,
-                                      size,
-                                      isDarkMode,
+                                    Divider(
+                                      color: isDarkMode
+                                          ? Colors.white
+                                          : Colors.black,
                                     ),
-                                    buildSevenDayForecast(
-                                      days[2],
-                                      minTemps[2],
-                                      maxTemps[2],
-                                      FontAwesomeIcons.cloudRain,
-                                      size,
-                                      isDarkMode,
-                                    ),
-                                    buildSevenDayForecast(
-                                      days[3],
-                                      minTemps[3],
-                                      maxTemps[3],
-                                      FontAwesomeIcons.sun,
-                                      size,
-                                      isDarkMode,
-                                    ),
-                                    buildSevenDayForecast(
-                                      days[4],
-                                      minTemps[4],
-                                      maxTemps[4],
-                                      FontAwesomeIcons.sun,
-                                      size,
-                                      isDarkMode,
-                                    ),
-                                    buildSevenDayForecast(
-                                      days[5],
-                                      minTemps[5],
-                                      maxTemps[5],
-                                      FontAwesomeIcons.cloud,
-                                      size,
-                                      isDarkMode,
-                                    ),
-                                    buildSevenDayForecast(
-                                      days[6],
-                                      minTemps[6],
-                                      maxTemps[6],
-                                      FontAwesomeIcons.snowflake,
-                                      size,
-                                      isDarkMode,
+                                    Padding(
+                                      padding:
+                                          EdgeInsets.all(size.width * 0.005),
+                                      child: Column(
+                                        children: [
+                                          buildSevenDayForecast(
+                                            "Today",
+                                            minTemps[0],
+                                            maxTemps[0],
+                                            FontAwesomeIcons.cloud,
+                                            size,
+                                            isDarkMode,
+                                          ),
+                                          buildSevenDayForecast(
+                                            days[1],
+                                            minTemps[1],
+                                            maxTemps[1],
+                                            FontAwesomeIcons.sun,
+                                            size,
+                                            isDarkMode,
+                                          ),
+                                          buildSevenDayForecast(
+                                            days[2],
+                                            minTemps[2],
+                                            maxTemps[2],
+                                            FontAwesomeIcons.cloudRain,
+                                            size,
+                                            isDarkMode,
+                                          ),
+                                          buildSevenDayForecast(
+                                            days[3],
+                                            minTemps[3],
+                                            maxTemps[3],
+                                            FontAwesomeIcons.sun,
+                                            size,
+                                            isDarkMode,
+                                          ),
+                                          buildSevenDayForecast(
+                                            days[4],
+                                            minTemps[4],
+                                            maxTemps[4],
+                                            FontAwesomeIcons.sun,
+                                            size,
+                                            isDarkMode,
+                                          ),
+                                          buildSevenDayForecast(
+                                            days[5],
+                                            minTemps[5],
+                                            maxTemps[5],
+                                            FontAwesomeIcons.cloud,
+                                            size,
+                                            isDarkMode,
+                                          ),
+                                          buildSevenDayForecast(
+                                            days[6],
+                                            minTemps[6],
+                                            maxTemps[6],
+                                            FontAwesomeIcons.snowflake,
+                                            size,
+                                            isDarkMode,
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ],
                                 ),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
-      ),
     );
   }
 
@@ -463,19 +516,32 @@ class _HomePageState extends State<HomePage> {
     List<double> temperatures,
     List<double> windSpeeds,
     List<double> precipitations,
-    List<IconData> icons,
+    IconData icon,
     Size size,
     bool isDarkMode,
   ) {
     List<Widget> forecasts = [];
+
     for (var p = 0; p < 24; p++) {
+      IconData icon;
+
+      if (precipitation[p] < 10) {
+        icon = FontAwesomeIcons.cloud;
+      } else if (precipitation[p] < 25) {
+        icon = FontAwesomeIcons.cloudRain;
+      } else if (precipitation[p] < 50) {
+        icon = FontAwesomeIcons.cloudShowersHeavy;
+      } else {
+        icon = FontAwesomeIcons.cloudSunRain;
+      }
+
       forecasts.add(
         buildForecastToday(
           times[p],
           temperatures[p],
           windSpeeds[p],
           precipitations[p],
-          icons[p],
+          icon,
           size,
           isDarkMode,
         ),
