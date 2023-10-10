@@ -39,11 +39,11 @@ class _HomePageState extends State<HomePage> {
     fetchWeather(cityName);
   }
 
-  Future<void> fetchWeather(String cityName) async {
+  Future<void> fetchWeather(String city) async {
     setState(() {
       isLoading = true;
     });
-    final model = await service.fetchWeatherData(cityName);
+    final model = await service.fetchWeatherData(city);
     setState(() {
       isLoading = false;
     });
@@ -56,15 +56,15 @@ class _HomePageState extends State<HomePage> {
         builder: ((context) {
           return AlertDialog(
             title: const Text('Invalid Location'),
-            content: Text('$errorMessage'),
+            content: Text(
+              '$errorMessage' + '\nor \nSpelling mismatch',
+              textAlign: TextAlign.center, // You can adjust alignment as needed
+            ),
             actions: <Widget>[
               TextButton(
                 onPressed: () {
                   Navigator.pop(context);
-                  setState(() {
-                    cityName = 'Tamil Nadu';
-                  });
-                  fetchWeather(cityName);
+                  fetchWeather('Chennai');
                 },
                 child: Text(
                   'OK',
@@ -82,7 +82,7 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         temperature = model.temperatureC.toInt();
         condition = model.condition;
-        cityName = cityName;
+        cityName = city;
 
         for (var i = 0; i < 7; i++) {
           if (i < model.mintemp.length) {
@@ -116,31 +116,31 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       body: isLoading
-          ?  Center(
-  child: Container(
-    height: size.height,
-    width: size.width,
-    decoration: BoxDecoration(
-      color: isDarkMode ? Colors.white : Colors.black,
-    ),
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const CircularProgressIndicator(
-          backgroundColor: Colors.grey,
-        ),
-        const SizedBox(height: 16),
-        Text(
-          'Loading Weather Data...',
-          style: TextStyle(
-            color: isDarkMode ? Colors.black : Colors.white,
-            fontSize: 16,
-          ),
-        ),
-      ],
-    ),
-  ),
-)
+          ? Center(
+              child: Container(
+                height: size.height,
+                width: size.width,
+                decoration: BoxDecoration(
+                  color: isDarkMode ? Colors.white : Colors.black,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const CircularProgressIndicator(
+                      backgroundColor: Colors.grey,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Loading Weather Data...',
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.black : Colors.white,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
           : Center(
               child: Container(
                 height: size.height,
@@ -214,7 +214,8 @@ class _HomePageState extends State<HomePage> {
                                               hintText: 'Search Location',
                                               border: InputBorder.none,
                                               icon: const Icon(
-                                                FontAwesomeIcons.magnifyingGlass,
+                                                FontAwesomeIcons
+                                                    .magnifyingGlass,
                                                 color: Colors.black,
                                               ),
                                               suffixIcon: IconButton(
