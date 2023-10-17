@@ -1,8 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:weather/model.dart';
 import 'package:weather/service.dart';
 
@@ -14,7 +17,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String cityName = 'Chennai';
+  String cityName = "Chennai";
+
   int temperature = 30;
   String condition = 'sunny';
   bool isSearch = false;
@@ -36,6 +40,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    requestLocationPermission();
     fetchWeather(cityName);
   }
 
@@ -102,6 +107,33 @@ class _HomePageState extends State<HomePage> {
         maxTemp = model.maxtemp[0];
       });
     }
+  }
+
+  void requestLocationPermission() async {
+    final status = await Permission.location.request();
+    if (status.isPermanentlyDenied) {
+      openAppSettings();
+    } else {
+      String location = await getCurrentLocation();
+      setState(() {
+        cityName = location;
+      });
+    }
+  }
+
+  Future<String> getCurrentLocation() async {
+    String locationName = 'Invalid location';
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+
+      List<Placemark> placemark =
+          await placemarkFromCoordinates(position.latitude, position.longitude);
+      locationName = placemark[0].subLocality!;
+    } catch (e) {
+      print(e);
+    }
+    return locationName;
   }
 
   @override
